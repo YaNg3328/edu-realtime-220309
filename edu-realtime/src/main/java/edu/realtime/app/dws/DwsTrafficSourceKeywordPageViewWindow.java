@@ -59,7 +59,7 @@ public class DwsTrafficSourceKeywordPageViewWindow {
          * 2.注册函数
          * 3.使用函数
          */
-        tableEnv.createTemporarySystemFunction("analyze", edu.realtime.func.KeywordUDTF.class);
+        tableEnv.createTemporarySystemFunction("analyze", KeywordUDTF.class);
         Table keywordTable = tableEnv.sqlQuery("select \n" +
                 "  keyword,\n" +
                 "  word,\n" +
