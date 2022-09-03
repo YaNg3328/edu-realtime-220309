@@ -44,9 +44,8 @@ public class DimSinkApp {
         String topicName = "topic_db";
         String groupID = "dim_sink_app";
         DataStreamSource<String> topicDbStream = env.addSource(KafkaUtil.getKafkaConsumer(topicName, groupID));
-
-    topicDbStream.print();
-       /* // TODO 4 转换格式和清洗过滤脏数据
+        /*topicDbStream.print();*/
+        // TODO 4 转换格式和清洗过滤脏数据
         // 将脏数据写入到侧输出流中
         OutputTag<String> dirtyOutputTag = new OutputTag<String>("Dirty"){};
         SingleOutputStreamOperator<JSONObject> jsonObjStream = topicDbStream.process(new ProcessFunction<String, JSONObject>() {
@@ -69,11 +68,10 @@ public class DimSinkApp {
             }
         });
 
-        // 获取脏数据的流
+               // 获取脏数据的流
         DataStream<String> dirtyStream = jsonObjStream.getSideOutput(dirtyOutputTag);
 
-//        dirtyStream.print("dirty>>>>>>>>>>");
-
+        dirtyStream.print("dirty>>>>>>>>>>");
         // TODO 5 使用flinkCDC读取配置表数据
         MySqlSource<String> mySqlSource = MySqlSource.<String>builder()
                 .hostname("hadoop102")
@@ -89,7 +87,7 @@ public class DimSinkApp {
 
         DataStreamSource<String> tableConfigStream = env.fromSource(mySqlSource,
                 WatermarkStrategy.noWatermarks(), "table_config");
-
+        tableConfigStream.print();
         // TODO 6 将配置流转换为广播流和主流进行连接
         // K String(表名)  判断当前表是否为维度表
         // V (后面的数据)   能够完成在phoenix中创建表格的工作
@@ -102,12 +100,8 @@ public class DimSinkApp {
 
         // TODO 7 处理连接流 根据配置流的信息  过滤出主流的维度表内容
         SingleOutputStreamOperator<JSONObject> filterTableStream = connectedStream.process(new MyBroadcastFunction(mapStateDescriptor));
-
-//        filterTableStream.print("filterTable>>>>>>>>");
-
         // TODO 8 将数据写入到phoenix中
         filterTableStream.addSink(new MyPhoenixSink());
-*/
         // TODO 9 执行任务
         env.execute(groupID);
 
