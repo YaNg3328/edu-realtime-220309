@@ -1,5 +1,6 @@
 package edu.realtime.app.dim;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONException;
 import com.alibaba.fastjson.JSONObject;
 import com.ververica.cdc.connectors.mysql.source.MySqlSource;
@@ -23,38 +24,46 @@ import org.apache.flink.util.OutputTag;
  */
 public class DimSinkApp {
     public static void main(String[] args) throws Exception {
-        // TODO 1 环境准备
+        // TODO 1 获取执行环境
         StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+
+        //设置并行度
         env.setParallelism(1);
 
-        // TODO 2 设置状态后端
+        // TODO 2 设置检查点和状态后端
         /*
-        env.enableCheckpointing(5 * 60 * 1000L, CheckpointingMode.EXACTLY_ONCE );
-        env.getCheckpointConfig().setCheckpointTimeout( 3 * 60 * 1000L );
+        env.enableCheckpointing(5 * 60 * 1000L, CheckpointingMode.EXACTLY_ONCE);
+        env.getCheckpointConfig().setCheckpointTimeout(3 * 60 * 1000L);
         env.getCheckpointConfig().setMaxConcurrentCheckpoints(2);
-        env.setStateBackend(new HashMapStateBackend());
         env.getCheckpointConfig().setCheckpointStorage("hdfs://hadoop102:8020/gmall/ck");
-        System.setProperty("HADOOP_USER_NAME", "atguigu");
+        System.setProperty("HADOOP_USER_NAME","atguigu");
+        env.setStateBackend(new HashMapStateBackend());
          */
 
-        // TODO 3 读取kafka的topic_db主题数据
+        // TODO 3 读取kafka对应的数据
         String topicName = "topic_db";
         String groupID = "dim_sink_app";
-        DataStreamSource<String> topicDBStream = env.addSource(KafkaUtil.getKafkaConsumer(topicName, groupID));
+        DataStreamSource<String> topicDbStream = env.addSource(KafkaUtil.getKafkaConsumer(topicName, groupID));
 
-        /* TODO 4 改变数据结构并将脏数据写出到侧输出流 */
+    topicDbStream.print();
+       /* // TODO 4 转换格式和清洗过滤脏数据
+        // 将脏数据写入到侧输出流中
         OutputTag<String> dirtyOutputTag = new OutputTag<String>("Dirty"){};
-        SingleOutputStreamOperator<JSONObject> jsonObjStream = topicDBStream.process(new ProcessFunction<String, JSONObject>() {
+        SingleOutputStreamOperator<JSONObject> jsonObjStream = topicDbStream.process(new ProcessFunction<String, JSONObject>() {
             @Override
             public void processElement(String value, Context ctx, Collector<JSONObject> out) throws Exception {
                 try {
-                    JSONObject jsonObject = JSONObject.parseObject(value);
+                    JSONObject jsonObject = JSON.parseObject(value);
                     String type = jsonObject.getString("type");
                     if (!"bootstrap-start".equals(type) && !"bootstrap-complete".equals(type)) {
                         out.collect(jsonObject);
+                    } else {
+                        // 特殊类型没有意义的数据 写到侧输出流
+                        ctx.output(dirtyOutputTag, value);
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
+                    // 不为json写到侧输出流
                     ctx.output(dirtyOutputTag, value);
                 }
             }
@@ -63,29 +72,34 @@ public class DimSinkApp {
         // 获取脏数据的流
         DataStream<String> dirtyStream = jsonObjStream.getSideOutput(dirtyOutputTag);
 
-        //TODO 5 使用flinkCDC读取配置表数据
-        MySqlSource<String> mysqlSource = MySqlSource.<String>builder()
+//        dirtyStream.print("dirty>>>>>>>>>>");
+
+        // TODO 5 使用flinkCDC读取配置表数据
+        MySqlSource<String> mySqlSource = MySqlSource.<String>builder()
                 .hostname("hadoop102")
                 .port(3306)
                 .username("root")
-                .password("123456")
+                .password("PPyy.1472@")
                 .databaseList("edu_config")
+                // 坑 需要填写库名加表名
                 .tableList("edu_config.table_process")
-                .deserializer(new JsonDebeziumDeserializationSchema())
+                .deserializer(new JsonDebeziumDeserializationSchema()) // 数据输出格式
                 .startupOptions(StartupOptions.initial())
                 .build();
+
+        DataStreamSource<String> tableConfigStream = env.fromSource(mySqlSource,
+                WatermarkStrategy.noWatermarks(), "table_config");
+
         // TODO 6 将配置流转换为广播流和主流进行连接
         // K String(表名)  判断当前表是否为维度表
         // V (后面的数据)   能够完成在phoenix中创建表格的工作
-        DataStreamSource<String> tableConfigStream = env.fromSource(mysqlSource, WatermarkStrategy.noWatermarks(),
-                "table_config");
-
-        MapStateDescriptor<String, TableProcess> mapStateDescriptor = new MapStateDescriptor<>("table_process",
-                String.class, TableProcess.class);
-
+        MapStateDescriptor<String, TableProcess> mapStateDescriptor = new MapStateDescriptor<>(
+                "table_process", String.class, TableProcess.class);
         BroadcastStream<String> broadcastStream = tableConfigStream.broadcast(mapStateDescriptor);
 
+
         BroadcastConnectedStream<JSONObject, String> connectedStream = jsonObjStream.connect(broadcastStream);
+
         // TODO 7 处理连接流 根据配置流的信息  过滤出主流的维度表内容
         SingleOutputStreamOperator<JSONObject> filterTableStream = connectedStream.process(new MyBroadcastFunction(mapStateDescriptor));
 
@@ -93,8 +107,9 @@ public class DimSinkApp {
 
         // TODO 8 将数据写入到phoenix中
         filterTableStream.addSink(new MyPhoenixSink());
-
+*/
         // TODO 9 执行任务
         env.execute(groupID);
+
     }
 }
