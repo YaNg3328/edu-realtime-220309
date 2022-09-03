@@ -15,7 +15,7 @@ public class JedisUtil {
         poolConfig.setBlockWhenExhausted(true);
         poolConfig.setMaxWaitMillis(2000);
         poolConfig.setTestOnBorrow(true);
-        jedisPool = new JedisPool(poolConfig, "hadoop102", 6379, 10000);
+        jedisPool = new JedisPool(poolConfig, "43.143.8.244", 26379, 10000);
     }
 
     public static Jedis getJedis() {
@@ -29,5 +29,6 @@ public class JedisUtil {
         String pong = jedis.ping();
         System.out.println(pong);
     }
+
 
 }
