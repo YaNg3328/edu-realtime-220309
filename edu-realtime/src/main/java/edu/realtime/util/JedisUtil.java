@@ -15,6 +15,7 @@ public class JedisUtil {
         poolConfig.setBlockWhenExhausted(true);
         poolConfig.setMaxWaitMillis(2000);
         poolConfig.setTestOnBorrow(true);
+        //修改redis的访问端口
         jedisPool = new JedisPool(poolConfig, "43.143.8.244", 26379, 10000);
     }
 
