@@ -1,4 +1,4 @@
-package edu.realtime.app.dwd;
+package edu.realtime.app.dwd.log;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
