@@ -20,6 +20,7 @@ public class KafkaUtil {
         Properties properties = new Properties();
         properties.setProperty(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG,BOOTSTRAP_SERVERS);
         properties.setProperty(ConsumerConfig.GROUP_ID_CONFIG,groupID);
+
         FlinkKafkaConsumer<String> flinkKafkaConsumer = new FlinkKafkaConsumer<String>(
                 topicName,
                 new KafkaDeserializationSchema<String>() {

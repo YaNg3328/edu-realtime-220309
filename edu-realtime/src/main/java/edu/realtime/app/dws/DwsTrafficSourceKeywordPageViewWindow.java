@@ -1,7 +1,7 @@
 package edu.realtime.app.dws;
 
-import edu.realtime.app.func.KeywordUDTF;
 import edu.realtime.bean.KeywordBean;
+import edu.realtime.func.KeywordUDTF;
 import edu.realtime.util.ClickHouseUtil;
 import edu.realtime.util.KafkaUtil;
 import org.apache.flink.streaming.api.datastream.DataStream;
@@ -41,7 +41,7 @@ public class DwsTrafficSourceKeywordPageViewWindow {
                 "  `ts`   bigint,\n" +
                 "  rt AS TO_TIMESTAMP_LTZ(ts, 3),\n" +
                 "  WATERMARK FOR rt AS rt - INTERVAL '2' SECOND \n" +
-                ")" + KafkaUtil.getKafkaDDL(topicName,groupID));
+                ")" + KafkaUtil.getKafkaDDL(topicName, groupID));
 
         // TODO 4.过滤转换数据格式
         //"item_type" = "keyword" && laet_page_id = search  && item不为空
@@ -51,7 +51,7 @@ public class DwsTrafficSourceKeywordPageViewWindow {
                 "from page_log\n" +
                 "where `page`['item_type'] = 'keyword' \n" +
                 "and `page`['item'] is not null");
-        tableEnv.createTemporaryView("filter_table",filterTable);
+        tableEnv.createTemporaryView("filter_table", filterTable);
         // TODO 5.使用自定义UDTF函数
         //面向官网编程Application Development -> Table API & SQL -> Functions -> user-defined function -> 右侧table Functions
         /**
@@ -66,7 +66,7 @@ public class DwsTrafficSourceKeywordPageViewWindow {
                 "  rt \n" +
                 "from filter_table,\n" +
                 " LATERAL TABLE(analyze(keyword))");
-        tableEnv.createTemporaryView("keyword_table",keywordTable);
+        tableEnv.createTemporaryView("keyword_table", keywordTable);
 
         // TODO 6.开窗
         Table resultTable = tableEnv.sqlQuery("select \n" +
