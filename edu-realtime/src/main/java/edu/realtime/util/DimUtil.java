@@ -82,13 +82,13 @@ public class DimUtil {
         Jedis jedis = JedisUtil.getJedis();
 
         long start = System.currentTimeMillis();
-        System.out.println(getDimInfo(connection, "DIM_BASE_CATEGORY3", "1"));
-        long end = System.currentTimeMillis();
-        System.out.println(end-start); //288  257
-
-        System.out.println(getDimInfo(connection, "DIM_BASE_CATEGORY2", "1"));
-        long end2 = System.currentTimeMillis();
-        System.out.println(end2-end); //10
+        System.out.println(getDimInfo(connection, "DIM_BASE_SUBJECT_INFO", "3"));
+//        long end = System.currentTimeMillis();
+//        System.out.println(end-start); //288  257
+//
+//        System.out.println(getDimInfo(connection, "DIM_BASE_CATEGORY2", "1"));
+//        long end2 = System.currentTimeMillis();
+//        System.out.println(end2-end); //10
 
         connection.close();
         dataSource.close();

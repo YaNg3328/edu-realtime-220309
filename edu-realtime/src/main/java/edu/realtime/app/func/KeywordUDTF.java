@@ -1,4 +1,4 @@
-package edu.realtime.func;
+package edu.realtime.app.func;
 
 
 import edu.realtime.util.KeywordUtil;

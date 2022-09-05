@@ -1,7 +1,7 @@
 package edu.realtime.app.dws;
 
 import edu.realtime.bean.KeywordBean;
-import edu.realtime.func.KeywordUDTF;
+import edu.realtime.app.func.KeywordUDTF;
 import edu.realtime.util.ClickHouseUtil;
 import edu.realtime.util.KafkaUtil;
 import org.apache.flink.streaming.api.datastream.DataStream;

@@ -84,14 +84,14 @@ public class DwdTestExamQuestion {
         //关联两张表作为考试试题明细表
         Table resultTable = tableEnv.sqlQuery("select \n" +
                 "teq.id,\n" +
-                "teq.score,\n" +
                 "teq.answer,\n" +
                 "teq.user_id,\n" +
                 "teq.paper_id,\n" +
                 "teq.question_id,\n" +
                 "teq.is_correct,\n" +
                 "teq.exam_id,\n" +
-                "te.duration_sec,\n" +
+                "te.score,\n" +
+                "te.duration_sec," +
                 "te.ts\n" +
                 "from\n" +
                 "test_exam_question teq\n" +
@@ -103,13 +103,13 @@ public class DwdTestExamQuestion {
         tableEnv.createTemporaryView("result_table",resultTable);
         tableEnv.executeSql("create table dwd_test_exam_question(\n" +
                 "id string,\n" +
-                "score string,\n" +
                 "answer string,\n" +
                 "user_id string,\n" +
                 "paper_id string,\n" +
                 "question_id string,\n" +
                 "is_correct string,\n" +
                 "exam_id string,\n" +
+                "score string,\n" +
                 "duration_sec string,\n" +
                 "ts string\n" +
                 ")"+KafkaUtil.getKafkaSinkDDL("dwd_test_exam_question"));
