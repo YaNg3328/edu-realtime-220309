@@ -103,8 +103,8 @@ public class KafkaUtil {
                 "  'topic' = '"+ topicName +"',\n" +
                 "  'properties.bootstrap.servers' = '"+ BOOTSTRAP_SERVERS +"',\n" +
                 "  'properties.group.id' = '"+ groupID +"',\n" +
-//                "  'scan.startup.mode' = 'group-offsets',\n" +
-                "  'scan.startup.mode' = 'earliest-offset',\n" + //从主题中的最早开始消费，省去重新造数据
+                "  'scan.startup.mode' = 'group-offsets',\n" +
+//                "  'scan.startup.mode' = 'earliest-offset',\n" + //从主题中的最早开始消费，省去重新造数据
                 "  'format' = 'json'\n" +
                 ")";
     }
